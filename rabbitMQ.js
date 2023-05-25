@@ -78,3 +78,26 @@ devices.forEach((device) => {
   const randomConsumer = consumers[Math.floor(Math.random() * consumers.length)];
   device.dataCallback = randomConsumer.receiveData.bind(randomConsumer);
 });
+
+async function RabbitMQ() {
+  try {
+    // Conexión a RabbitMQ
+    const connection = await amqp.connect('amqp://localhost');
+    const channel = await connection.createChannel();
+
+    // Declarar una cola para los datos de IoT
+    await channel.assertQueue('iot_data_queue', { durable: false });
+
+    // Crear los dispositivos IoT
+    const devices = [];
+    for (let i = 1; i <= n; i++) {
+      const device = new Device(i, interval, dataSize, channel);
+      devices.push(device);
+      device.run();
+    }
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+RabbitMQ();
